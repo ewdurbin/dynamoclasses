@@ -31,9 +31,10 @@ setup(
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
     install_requires=['botocore'],
-    tests_require=['moto'],
 
-    extras_require={},
+    extras_require={
+        'test': ['moto'],
+    },
 
     package_data={},
     data_files=[],
