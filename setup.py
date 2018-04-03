@@ -30,7 +30,7 @@ setup(
 
     packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 
-    install_requires=['botocore'],
+    install_requires=['boto3', 'dataclasses'],
 
     extras_require={
         'test': ['moto'],
