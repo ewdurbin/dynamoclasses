@@ -41,7 +41,7 @@ def _process_class(
 
     setattr(data_class, "__dynamoclass_client__", boto3.client("dynamodb"))
 
-    def _format_to_dynamo(self):
+    def _to_dynamo(self):
         return {
             k: {TYPE_MAPPING[type(v)]["key"]: TYPE_MAPPING[type(v)]["fn"](v)}
             for k, v in asdict(self).items()
@@ -50,11 +50,11 @@ def _process_class(
     def save(self):
         return self.__dynamoclass_client__.put_item(
             TableName=self.__dynamoclass_params__["table_name"],
-            Item=self._format_to_dynamo(),
+            Item=self._to_dynamo(),
         )
 
     @classmethod
-    def _format_to_dataclass(cls, dynamodb_item):
+    def _to_dataclass(cls, dynamodb_item):
         kwargs = {}
         for field_name, value in dynamodb_item.items():
             if field_name not in cls.__dataclass_fields__:
@@ -69,44 +69,43 @@ def _process_class(
         return kwargs
 
     @classmethod
-    def _render_to_type(cls, field_name, value):
+    def _dataclass_field_to_dynamo_field(cls, field_name, value):
         if field_name not in cls.__dataclass_fields__:
             raise ValueError(
                 f"Cannot render field with name {field_name}! "
                 f"No such field name found for {cls}!"
             )
 
-        return {
-            TYPE_MAPPING[cls.__dataclass_fields__[field_name].type][
-                "key"
-            ]: TYPE_MAPPING[
-                cls.__dataclass_fields__[field_name].type
-            ][
-                "fn"
-            ](
-                cls.__dataclass_fields__[field_name].type(value)
-            )
-        }
+        field_type = cls.__dataclass_fields__[field_name].type
+        mapping = TYPE_MAPPING[field_type]
+
+        dynamo_type =  mapping["key"]
+        dynamo_value = mapping["fn"](field_type(value))
+
+        return {dynamo_type: dynamo_value}
 
     @classmethod
     def get(cls, *, partition_key, sort_key):
+        partition_key_name = cls.__dynamoclass_params__["partition_key_name"]
+        sort_key_name = cls.__dynamoclass_params__["sort_key_name"]
+        table_name = cls.__dynamoclass_params__["table_name"]
         key = {
-            cls.__dynamoclass_params__["partition_key_name"]: cls._render_to_type(
-                cls.__dynamoclass_params__["partition_key_name"], partition_key
+            partition_key_name: cls._dataclass_field_to_dynamo_field(
+                partition_key_name, partition_key
             )
         }
-        if cls.__dynamoclass_params__["sort_key_name"] is not None:
-            key[cls.__dynamoclass_params__["sort_key_name"]] = cls._render_to_type(
-                cls.__dynamoclass_params__["sort_key_name"], sort_key
+        if sort_key_name is not None:
+            key[sort_key_name] = cls._dataclass_field_to_dynamo_field(
+                sort_key_name, sort_key
             )
         item = cls.__dynamoclass_client__.get_item(
-            TableName=cls.__dynamoclass_params__["table_name"], Key=key
+            TableName=table_name, Key=key
         )
-        return cls(**cls._format_to_dataclass(item["Item"]))
+        return cls(**cls._to_dataclass(item["Item"]))
 
-    data_class._format_to_dynamo = _format_to_dynamo
-    data_class._format_to_dataclass = _format_to_dataclass
-    data_class._render_to_type = _render_to_type
+    data_class._to_dynamo = _to_dynamo
+    data_class._to_dataclass = _to_dataclass
+    data_class._dataclass_field_to_dynamo_field = _dataclass_field_to_dynamo_field
     data_class.save = save
     data_class.get = get
 
