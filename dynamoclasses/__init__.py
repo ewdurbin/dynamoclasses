@@ -9,7 +9,7 @@ TYPE_MAPPING = {
     float: {"key": "N", "fn": lambda x: str(x)},
     int: {"key": "N", "fn": lambda x: str(x)},
     bytes: {"key": "B", "fn": lambda x: str(x)},
-    dict: {"key": "M", "fn": lambda x: str(x)},
+    dict: {"key": "M", "fn": lambda x: x},
     bool: {"key": "BOOL", "fn": lambda x: x},
     None: {"key": "NULL", "fn": lambda x: x},
 }
