@@ -11,7 +11,7 @@ TYPE_MAPPING = {
     bytes: {"key": "B", "fn": lambda x: str(x)},
     dict: {"key": "M", "fn": lambda x: x},
     bool: {"key": "BOOL", "fn": lambda x: x},
-    None: {"key": "NULL", "fn": lambda x: x},
+    type(None): {"key": "NULL", "fn": lambda x: True},
 }
 
 
