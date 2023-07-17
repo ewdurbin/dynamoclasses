@@ -12,12 +12,12 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='dynamoclasses',
-    version='1.0.0a1',
+    version='1.0.0a2',
     description='DynamoDB ORM using dataclasses',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/ewdurbin/dynamoclasses',
-    author='Ernest W. Durbin III',
+    author='Ee Durbin',
     author_email='ewdurbin@gmail.com',
 
     classifiers=[
